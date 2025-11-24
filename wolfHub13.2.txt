@@ -1,0 +1,275 @@
+-- Wolf Hub V1.5 Troll Players Fling Couch + Skybox/Planking
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/matheuzxs/RedzlibV5Modify/refs/heads/main/MelhorQueFluent", true))()
+local Window = Library:MakeWindow({
+    Title = " Wolf Hub - Brookhaven 🏡RP",
+    SubTitle = "by GuzTer_666 And Anomino666",
+    LoadText = "Wolf Hub V13.2",
+    Flags = "WolfHub_Brookhaven"
+})
+
+-- 🔊 Som ao iniciar o Hub (JÁ APLICADO)
+local sound = Instance.new("Sound")
+sound.SoundId = "rbxassetid://9085027122"
+sound.Volume = 3
+sound.Parent = game.SoundService
+sound:Play()
+game:GetService("Debris"):AddItem(sound, 7)
+
+-- Botão minimizar personalizado
+Window:AddMinimizeButton({
+    Button = { Image = "rbxassetid://7276082936", BackgroundTransparency = 0 },
+    Corner = { CornerRadius = UDim.new(35, 1) }
+})
+
+-- Serviços
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+----------------------------------------------------------------
+-- === Aba Main ===
+----------------------------------------------------------------
+local MainTab = Window:MakeTab({
+    Title = "Main",
+    Icon = "rbxassetid://107000362674967"
+})
+
+MainTab:AddButton({
+    Name = "Bem-Vindo No Wolf Hub V13.2!",
+    Callback = function() end
+})
+
+----------------------------------------------------------------
+-- === Aba Troll ===
+----------------------------------------------------------------
+local TrollTab = Window:MakeTab({Title = "Fling", Icon = "rbxassetid://107000362674967"})
+local selectedPlayerName = ""
+local jogandoFling = false
+local forcaGlobal = nil
+
+TrollTab:AddTextBox({
+    Name = "Nome do Jogador",
+    Description = "Digite o nome do jogador",
+    PlaceholderText = "Ex: Wolf",
+    Callback = function(value)
+        selectedPlayerName = value
+    end
+})
+
+local function jogarComSofa(alvo)
+    if not alvo or not alvo.Character or alvo == LocalPlayer then return end
+    local character = LocalPlayer.Character
+    if not character then return end
+    local myHRP = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not myHRP or not humanoid then return end
+
+    local alvoHRP = alvo.Character:FindFirstChild("HumanoidRootPart")
+    if not alvoHRP then return end
+
+    local posOriginal = myHRP.CFrame
+    local boneco = character
+
+    ReplicatedStorage:WaitForChild("RE"):WaitForChild("1Clea1rTool1s"):FireServer("ClearAllTools")
+    task.wait(0.2)
+    ReplicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
+    task.wait(0.3)
+
+    local sofa = boneco:FindFirstChild("Couch") or LocalPlayer.Backpack:FindFirstChild("Couch")
+    if sofa then sofa.Parent = boneco end
+    task.wait(0.1)
+
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.F, false, game)
+    task.wait(0.25)
+
+    Workspace.FallenPartsDestroyHeight = 0/0
+
+    local forca = Instance.new("BodyVelocity")
+    forca.Name = "ForcaJogada"
+    forca.Velocity = Vector3.new(9e8, 9e8, 9e8)
+    forca.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    forca.Parent = myHRP
+    forcaGlobal = forca
+
+    humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+    humanoid.PlatformStand = false
+
+    jogandoFling = true
+
+    task.spawn(function()
+        local angulo = 0
+        while jogandoFling and alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") do
+            local alvoHum = alvo.Character:FindFirstChild("Humanoid")
+            if alvoHum.Sit then break end
+
+            angulo += 50
+            myHRP.CFrame = CFrame.new(alvoHRP.Position + alvoHRP.Velocity / 1.5)
+                * CFrame.Angles(math.rad(angulo), 0, 0)
+
+            myHRP.Velocity = Vector3.new(9e8, 9e8, 9e8)
+            myHRP.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+            task.wait()
+        end
+
+        jogandoFling = false
+
+        if forcaGlobal then
+            forcaGlobal:Destroy()
+            forcaGlobal = nil
+        end
+
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+        humanoid.PlatformStand = false
+        myHRP.CFrame = posOriginal
+
+        for _, p in pairs(boneco:GetDescendants()) do
+            if p:IsA("BasePart") then
+                p.Velocity = Vector3.zero
+                p.RotVelocity = Vector3.zero
+            end
+        end
+
+        humanoid:UnequipTools()
+        ReplicatedStorage.RE:FindFirstChild("1Too1l"):InvokeServer("PickingTools", "Couch")
+    end)
+end
+
+-- ▶ Botão FLINGAR
+TrollTab:AddButton({
+    Name = "Flingar Player",
+    Callback = function()
+        if selectedPlayerName == "" then return end
+        for _, p in pairs(Players:GetPlayers()) do
+            if string.find(p.Name:lower(), selectedPlayerName:lower()) then
+                jogarComSofa(p)
+                break
+            end
+        end
+    end
+})
+
+-- 🚫 BOTÃO CANCELAR FLING (APLICADO)
+TrollTab:AddButton({
+    Name = "Cancelar Fling",
+    Callback = function()
+        jogandoFling = false
+
+        local char = LocalPlayer.Character
+        if not char then return end
+
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChild("Humanoid")
+
+        if forcaGlobal then
+            forcaGlobal:Destroy()
+            forcaGlobal = nil
+        end
+
+        if hum then
+            hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+            hum.PlatformStand = false
+        end
+
+        if hrp then
+            hrp.Velocity = Vector3.zero
+            hrp.RotVelocity = Vector3.zero
+        end
+    end
+})
+
+----------------------------------------------------------------
+-- === Aba Skybox/Planking ===
+----------------------------------------------------------------
+local SoundTab = Window:MakeTab({Title = "SkyBox", Icon = "rbxassetid://137000362674967"})
+
+SoundTab:AddButton({
+    Name = "Ativar Skybox e Planking",
+    Callback = function()
+        local args = {{100839513065432}}
+        game.ReplicatedStorage.Remotes.ChangeCharacterBody:InvokeServer(unpack(args))
+
+        function missing(t, f, fallback)
+            if type(f) == t then return f end
+            return fallback
+        end
+        cloneref = missing("function", cloneref, function(...) return ... end)
+
+        local Services = setmetatable({}, {
+            __index = function(_, name)
+                return cloneref(game:GetService(name))
+            end
+        })
+
+        local player = Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:WaitForChild("Humanoid")
+
+        local function LoadTrack(id)
+            local newAnim = Instance.new("Animation")
+            newAnim.AnimationId = "rbxassetid://" .. id
+            local track = humanoid:LoadAnimation(newAnim)
+            track.Priority = Enum.AnimationPriority.Action4
+            track:Play(0.1, 1, 1)
+            CurrentTrack = track
+            return track
+        end
+
+        LoadTrack(101852027997337)
+        task.wait(0.5)
+
+        local plankAnim = Instance.new("Animation")
+        plankAnim.AnimationId = "rbxassetid://3695333486"
+        RigidTrack = humanoid:LoadAnimation(plankAnim)
+        RigidTrack.Priority = Enum.AnimationPriority.Movement
+        RigidTrack:Play(0.1, 1, 0)
+
+        SkyboxActive = true
+    end
+})
+
+SoundTab:AddButton({
+    Name = "Desativar Skybox e Planking",
+    Callback = function()
+        if CurrentTrack then CurrentTrack:Stop(0.1) end
+        if RigidTrack then RigidTrack:Stop(0.1) end
+
+        SkyboxActive = false
+
+        game.ReplicatedStorage.Remotes.ResetCharacterAppearance:FireServer()
+        task.wait(0.3)
+
+        local char = Players.LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.Health = 0
+        end
+    end
+})
+
+Players.LocalPlayer.CharacterAdded:Connect(function()
+    SkyboxActive = false
+    CurrentTrack = nil
+    RigidTrack = nil
+end)
+
+----------------------------------------------------------------
+-- === Aba Scripts (SEM SOM) ===
+----------------------------------------------------------------
+local ScriptsTab = Window:MakeTab({
+    Title = "Scripts",
+    Icon = "rbxassetid://107000362674967"
+})
+
+ScriptsTab:AddButton({
+    Name = "Infinite Yield",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
+    end
+})
+
+ScriptsTab:AddButton({
+    Name = "Fly GUI",
+    Callback = function()
+        loadstring(game:HttpGet("https://pastefy.app/iZTXrNcM/raw", true))()
+    end
+})
