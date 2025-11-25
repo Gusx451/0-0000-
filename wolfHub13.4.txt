@@ -57,7 +57,7 @@ local speedValue = 16 -- Valor padrão
 -- Caixa de texto para definir a velocidade (AGORA PRIMEIRO)
 MainTab:AddTextBox({
     Name = "Definir Velocidade",
-    Description = "Digite a velocidade desejada",
+    Description = "Digite a Velocidade:",
     PlaceholderText = "Ex: 50",
     Callback = function(value)
         local numero = tonumber(value)
@@ -787,4 +787,5 @@ TeleportTab:AddButton({
             end
         end
     end
+})  end
 })
